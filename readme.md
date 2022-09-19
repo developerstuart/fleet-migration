@@ -52,6 +52,9 @@ Open terminal and run
 
 Depending on your environment config it'll then tell you all the glorious things it's doing, including talking a lot about a deprecated datepicker from Typo3 (if CONSOLE_DEBUG is turned on)
 
+## Re-running this script
+You can re-run the script and it'll check for the page and images already existing and edit them rather than creating a new blog post each time. However, to do this it looks for a blog post based on title alone as the unique identifier. If you have multiple blog posts with the same title you'll find have issues doing this as it'll keep writing over only the first version it finds.
+
 ## Wordpress conversion script
 Also included in repo is example JSON files and a node script to convert from Wordpress Export files into the import.json format.
 
