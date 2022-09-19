@@ -1,7 +1,11 @@
 const fs = require('fs');
-const posts = require("./data/posts.json");
-const media = require("./data/media.json");
+const posts = require("./data/wordpress_posts.json");
+const media = require("./data/wordpress_media.json");
 const data = [];
+
+const jsdom = require("jsdom");
+const { JSDOM } = jsdom;
+const { document } = (new JSDOM(`...`)).window;
 
 htmlentities = {
   /**
@@ -36,15 +40,20 @@ function run() {
     let item = items[i];
     let row = {
       title: item.title.__cdata,
-      slug: item.link.replace(/https?:\/\/(www\.)?elmbridgelibdems.org.uk/, ''),
+      slug: item.link.replace(/https?:\/\/[^\/]+/, ''),
       content: typeof(item.encoded[0].__cdata) == "object" ? item.encoded[0].__cdata[0] : item.encoded[0].__cdata,
     };
     
     console.log('Importing ' + row.title);
     
     row.content = row.content.replace(/https?:\/\/(www\.)?elmbridgelibdems.org.uk\/wp-content/g, "https://archive.elmbridgelibdems.org.uk/wp-content");
+    if(!row.content.match(/<p/)) {
+      row.content = "<p>" + row.content + "</p>";
+    }
     
-    let excerpt = htmlentities.decode(row.content.replace(/<[^>]+>/g, '').trim());
+    let div = document.createElement('div');
+    div.innerHTML = row.content;
+    let excerpt = div.querySelector('p').textContent.trim();
     if(excerpt.length > 120) {
       excerpt = excerpt.substring(0, 120) + "...";
     }

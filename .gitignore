@@ -5,4 +5,5 @@ media/*
 screenshots/*
 !screenshots
 data/*
-!data
+!data/*.example.*
+.DS_Store

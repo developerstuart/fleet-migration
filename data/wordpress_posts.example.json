@@ -1,0 +1,147 @@
+{
+  "rss": {
+    "channel": {
+      "title": "Elmbridge Liberal Democrats",
+      "link": "https://elmbridgelibdems.org.uk",
+      "description": "",
+      "pubDate": "Wed, 14 Sep 2022 16:16:58 +0000",
+      "language": "en-US",
+      "wxr_version": 1.2,
+      "base_site_url": "https://elmbridgelibdems.org.uk",
+      "base_blog_url": "https://elmbridgelibdems.org.uk",
+      "author": [
+        
+      ],
+      "generator": "https://wordpress.org/?v=5.8.5",
+      "image": {
+        "url": "https://elmbridgelibdems.org.uk/wp-content/uploads/2020/03/cropped-logo-elmbridge@2x-32x32.png",
+        "title": "Elmbridge Liberal Democrats",
+        "link": "https://elmbridgelibdems.org.uk",
+        "width": 32,
+        "height": 32
+      },
+      "item": [
+        {
+          "title": {
+            "__cdata": "Elmbridge sets out plans to invest £1 million of Shared Prosperity Fund"
+          },
+          "link": "https://elmbridgelibdems.org.uk/elmbridge-sets-out-plans-to-invest-1-million-of-shared-prosperity-fund/",
+          "pubDate": "Thu, 04 Aug 2022 07:44:20 +0000",
+          "creator": {
+            "__cdata": "eld-comms-group"
+          },
+          "guid": "https://elmbridgelibdems.org.uk/?p=5327",
+          "description": "",
+          "encoded": [
+            {
+              "__cdata": "<!-- wp:paragraph -->\n<p>As part of the levelling-up agenda, the government has made available £1 Million Pounds to Elmbridge through the UK Shared Prosperity Fund. This week the council have presented plans for how the money will be spent across the Borough.</p>\n<!-- /wp:paragraph -->\n\n<!-- wp:paragraph -->\n<p><strong>Councillor Robin Stephens</strong>, Portfolio Holder for Economy and Local Enterprise, said:</p>\n<!-- /wp:paragraph -->\n\n<!-- wp:paragraph -->\n<p>“We are excited to present to the Government our plans for the Shared Prosperity Fund which include help to support plans to relaunch the Walton Playhouse and playgrounds across the borough. We want to work with our community locally to target support, invest in our community facilities, back our high streets and help our businesses reduce their costs and carbon footprint.”</p>\n<!-- /wp:paragraph -->\n\n<!-- wp:paragraph -->\n<p>Liberal Democrats are committed to improving wet and dry play spaces for children in Elmbridge. Plans include funds for Claygate &amp; Hurst Pools as well as focusing on new options in Weybridge, Hersham, West Molesey, Grovelands and around the rest of the Borough.</p>\n<!-- /wp:paragraph -->\n\n<!-- wp:paragraph -->\n<p>A significant element of the Shared prosperity fund will be focused on supporting local business and our high streets as the hearts of our towns and villages.</p>\n<!-- /wp:paragraph -->\n\n<!-- wp:paragraph -->\n<p><strong>Bruce McDonald</strong>, leader of Elmbridge Liberal Democrats, “The Council will be working with local community groups to ensure the funds are spent in a way which has the biggest impact for our residents. Over the 3 years the fund is available we want residents to see a real change”</p>\n<!-- /wp:paragraph -->\n\n<!-- wp:paragraph -->\n<p>The Liberal Democrats are working hard to make Elmbridge the very best place to live and work in the country.</p>\n<!-- /wp:paragraph -->"
+            },
+            {
+              "__cdata": ""
+            }
+          ],
+          "post_id": 5327,
+          "post_date": {
+            "__cdata": "2022-08-04 07:44:20"
+          },
+          "post_date_gmt": {
+            "__cdata": "2022-08-04 07:44:20"
+          },
+          "post_modified": {
+            "__cdata": "2022-08-04 07:44:22"
+          },
+          "post_modified_gmt": {
+            "__cdata": "2022-08-04 07:44:22"
+          },
+          "comment_status": {
+            "__cdata": "closed"
+          },
+          "ping_status": {
+            "__cdata": "open"
+          },
+          "post_name": {
+            "__cdata": "elmbridge-sets-out-plans-to-invest-1-million-of-shared-prosperity-fund"
+          },
+          "status": {
+            "__cdata": "publish"
+          },
+          "post_parent": 0,
+          "menu_order": 0,
+          "post_type": {
+            "__cdata": "post"
+          },
+          "post_password": {
+            "__cdata": ""
+          },
+          "is_sticky": 0,
+          "category": [
+            {
+              "__cdata": "Elmbridge government"
+            },
+            {
+              "__cdata": "Leisure"
+            }
+          ],
+          "postmeta": [
+            {
+              "meta_key": {
+                "__cdata": "_pingme"
+              },
+              "meta_value": {
+                "__cdata": "1"
+              }
+            },
+            {
+              "meta_key": {
+                "__cdata": "_thumbnail_id"
+              },
+              "meta_value": {
+                "__cdata": "5328"
+              }
+            },
+            {
+              "meta_key": {
+                "__cdata": "_edit_last"
+              },
+              "meta_value": {
+                "__cdata": "23"
+              }
+            },
+            {
+              "meta_key": {
+                "__cdata": "_yoast_wpseo_primary_category"
+              },
+              "meta_value": {
+                "__cdata": "52"
+              }
+            },
+            {
+              "meta_key": {
+                "__cdata": "_yoast_wpseo_content_score"
+              },
+              "meta_value": {
+                "__cdata": "30"
+              }
+            },
+            {
+              "meta_key": {
+                "__cdata": "_yoast_wpseo_estimated-reading-time-minutes"
+              },
+              "meta_value": {
+                "__cdata": "2"
+              }
+            },
+            {
+              "meta_key": {
+                "__cdata": "_yoast_wpseo_wordproof_timestamp"
+              },
+              "meta_value": {
+                "__cdata": ""
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -3,13 +3,23 @@ const client = require('https');
 require('dotenv').config();
 const puppeteer = require('puppeteer');
 
+// Pull in post data (importList)
 const importList = require("./data/import.json");
+
+// Create screenshots folder
+if (!fs.existsSync("./screenshots")){
+  fs.mkdirSync("./screenshots");
+}
+
+// Create media folder to download featuredImages to
+if (!fs.existsSync("./media")){
+  fs.mkdirSync("./media");
+}
 
 const urls = {
   base: "https://beta.libdems.org.uk",
   login: "https://beta.libdems.org.uk/typo3/",
-  news_list: "https://beta.libdems.org.uk/typo3/module/web/NewsAdministration/?id=2420",
-  add_blog_post: "https://beta.libdems.org.uk/typo3/record/edit?edit%5Btx_news_domain_model_news%5D%5B2420%5D=new"
+  news_list: process.env.URL_NEWS_LIST,
 }
 
 const fleet = {
@@ -18,20 +28,30 @@ const fleet = {
 }
 
 function downloadImage(url, filepath) {
-    return new Promise((resolve, reject) => {
-        client.get(url, (res) => {
-            if (res.statusCode === 200) {
-                res.pipe(fs.createWriteStream(filepath))
-                    .on('error', reject)
-                    .once('close', () => resolve(filepath));
-            } else {
-                // Consume response data to free up memory
-                res.resume();
-                reject(new Error(`Request Failed With a Status Code: ${res.statusCode}`));
-
-            }
-        });
+  return new Promise((resolve, reject) => {
+    client.get(url, (res) => {
+      if (res.statusCode === 200) {
+        res.pipe(fs.createWriteStream(filepath))
+            .on('error', reject)
+            .once('close', () => resolve(filepath));
+      } else {
+        // Consume response data to free up memory
+        res.resume();
+        reject(new Error(`Request Failed With a Status Code: ${res.statusCode}`));
+      }
     });
+  });
+}
+
+var screenShotCount = 0;
+async function takeScreenshot(key, page, i) {
+  if(!process.env.SCREENSHOT_DEBUG)
+    return;
+  screenShotCount++;
+  let name = "row" + i + "-" + screenShotCount + "-" + key;
+  console.log('Taking screenshot: ' + name);
+  await page.screenshot({path: 'screenshots/' + name + '.png'});
+  return;
 }
 
 function init() {
@@ -43,37 +63,37 @@ async function close(browser) {
   browser.close();
 }
 
-async function login() {
+async function run() {
   return new Promise(async (resolve, reject) => {
     try {
+      // Create browser and page
       const browser = await puppeteer.launch();
       const page = await browser.newPage();
 
-      //page.setCookie(...cookies);
-      page.on('console', consoleObj => console.log(consoleObj.text()));
+      if(process.env.CONSOLE_DEBUG) {
+        page.on('console', consoleObj => console.log(consoleObj.text()));
+      }
       
+      // Go to login page, login with credentials
       await page.goto(urls.login);
       await page.type('#t3-username', fleet.user_id);
       await page.type('#t3-password', fleet.user_pass);
       await page.click('#t3-login-submit');
       await page.waitForNavigation();
       
+      // Save and set cookies
       const cookies = await page.cookies();
       console.log(cookies);
-      
-      
       await page.setCookie(...cookies);
-
       
-      importList.reverse();
-      
+      // Run through import list
       for(let i=0; i<importList.length; i++) {
         let importItem = importList[i];
-        console.log(`... Importing [${i+1} / ${importList.length}]`);
+        console.log(`===> Importing [${i+1} / ${importList.length}]`);
         
-        
+        // Wrapped in try so entire script doesn't fall over
         try {
-          // Grab image
+          // If featuredImageURL in row, try to download image to /media/
           importItem.featuredImagePath = false;
           if(importItem.featuredImageURL) {
             let fileNameParts = importItem.featuredImageURL.split("/");
@@ -85,6 +105,7 @@ async function login() {
                 //file exists
                 importItem.featuredImagePath = filePath;
               } else {
+                // file doesn't exist, download
                 await downloadImage(importItem.featuredImageURL, filePath).then(() => {
                   importItem.featuredImagePath = filePath;
                 })
@@ -92,35 +113,56 @@ async function login() {
             } catch(err) {
               console.error(err)
             }
-            
           }
           
           // Determine if page exists and edit, or to create new page
+          
+          // Go to New List page
           await page.goto(urls.news_list, {waitUntil: 'networkidle0'});
-          await page.waitForSelector("#typo3-contentIframe");
-          await page.evaluate( (importItem) => {
-            let frameContext = document.getElementById('typo3-contentIframe').contentWindow.document;
-            let $pages = frameContext.querySelectorAll('.col-title a');
-            let $editElement = false;
-            $pages.forEach($el => {
-              if($el.textContent.trim() == importItem.title) {
-                $editElement = $el;
+          
+          await takeScreenshot('news-listview', page, i);
+          // Check if page exists against title (assumes titles are unique!)
+          let searching_for_news = true;
+          while(searching_for_news) {
+            await page.waitForSelector("#typo3-contentIframe");
+            
+            searching_for_news = await page.evaluate( (importItem) => {
+              let frameContext = document.getElementById('typo3-contentIframe').contentWindow.document;
+              let $pages = frameContext.querySelectorAll('.col-title a');
+              let $editElement = false;
+              $pages.forEach($el => {
+                if($el.textContent.trim() == importItem.title) {
+                  $editElement = $el;
+                }
+              });
+              if($editElement) {
+                // Found page, click to move to edit it
+                $editElement.click();
+                console.log('Page already exists => editing');
+                return false;
+              } else {
+                if(frameContext.querySelector('.page-item a[aria-label="Next"]')) {
+                  // Not found in this list, if there are more pages, click the next link and repeat
+                  frameContext.querySelector('.page-item a[aria-label="Next"]').click();
+                  console.log('Page not found in this list => Searching another page in list');
+                  return true;
+                } else {
+                  // Not found in this list and no more pages, we must create a new page
+                  frameContext.querySelector('a[title="Create new news record"]').click();
+                  console.log('No page exists => Create new page!');
+                  return false;
+                }
+                
               }
-            });
-            if($editElement) {
-              $editElement.click();
-              console.log('Page already exists, editing');
-            } else {
-              frameContext.querySelector('a[title="Create new news record"]').click();
-              console.log('Create new page!');
-            }
-          }, importItem);
+            }, importItem);
+            await page.waitForNavigation();
+          }
         
-          await page.waitForNavigation();
-          //await page.goto(edit_page_url, {waitUntil: 'networkidle0'});
+          // Because everything in typo3 happens in iframes. Sigh
           let contentFrameHandle = await page.waitForSelector("#typo3-contentIframe");
           const contentFrame = await contentFrameHandle.contentFrame();
-          //await page.waitForSelector("[name='_savedok']");
+          await takeScreenshot('news-edit', page, i);
+
           let setValues = await page.evaluate((importItem) => {
             let frameWindow = document.getElementById('typo3-contentIframe').contentWindow;
             let frameContext = frameWindow.document;
@@ -142,8 +184,10 @@ async function login() {
               datetime: importItem.date
             }
             
+            // Find all inputs on the page across tabs that we can possible fill in
             let $inputs = frameContext.querySelectorAll('input, textarea');
             $inputs.forEach($el => {
+              // Loop through. Focus on each element to initiate
               $el.focus();
               let name = $el.getAttribute("data-formengine-input-name");
               if(!name)
@@ -151,15 +195,19 @@ async function login() {
               //console.log(name);
               let name_parts = name ? name.match(/\[([^\]]+)\]/g) : false;
               let ref = false;
+              
+              // Reduce to short hand ref []
               if(name_parts && name_parts.length && name_parts[name_parts.length-1]) {
                 ref = name_parts[name_parts.length-1].replace("[", "").replace("]", "");
               }
+              
               if(ref)
                 console.log(ref);
               
+              // Is this a value we're setting?
               if(ref && values[ ref ]) {
                 $el.value = values[ ref ];
-                console.log('Found ' + ref);
+                console.log('--- Found ' + ref);
                 setValues.push(ref);
                 
                 try {
@@ -167,6 +215,7 @@ async function login() {
                   $el.dispatchEvent(event_change);
                 } catch(err) { console.error(err); }
                 
+                // WYSIWYGs get their own features
                 if(ref == "bodytext") {
                   let id = $el.getAttribute("id");
                   frameWindow.CKEDITOR.instances[id].setData(values[ref]);
@@ -176,50 +225,45 @@ async function login() {
               }
             });
             
-          /* let $mediaButton = frameContext.querySelector('[title="Add media file"]');
-            $mediaButton.click();
-            let $mediaIframe = document.querySelector('[name="modal_frame"]');
-            let mediaFrameDocument = $mediaIframe.contentWindow.document;
-            let $folderButtons = mediaFrameDocument.querySelectorAll('.node-name');
-            $folderButtons.forEach($folder => {
-              if($folder.textContent == "Images") {
-                $folder.click();
-              }
-            });
-            let $fileInput = mediaFrameDocument.querySelector('[name="upload_0[]"]');
-            // Set file value
-            let $fileUpload = mediaFrameDocument.querySelector('.btn[type="submit"][value="Upload files"]');
-            $fileUpload.click();*/
-            
-            //
-      
-            //frameContext.querySelector('[name="_savedok"]').click();
             return (setValues);
           }, importItem);
+          await takeScreenshot('news-edit-valuesset', page, i);
           
+          console.log('Following values found and set:');
+          console.log(setValues);
+          
+          // If we have a featured Image to upload
           if(importItem.featuredImagePath) {
+            // Switch to media tab
             await contentFrame.click('.typo3-TCEforms ul.nav li:nth-child(3) > a');
             await contentFrame.waitForSelector('button[title="Add media file"]');
             
+            // Check if a featured image already exists attached to this page
             let imageAlreadyExists = await contentFrame.evaluate(() => {
               let el = document.querySelector("button.form-irre-header-cell")
               return el ? true : false;
             });
             console.log('imageAlreadyExists? ' + imageAlreadyExists);
-            await page.screenshot({path: 'screenshots/got-here1.png'});
+            await takeScreenshot('media-tab', page, i);
             
             if(!imageAlreadyExists) {
             
+              // Open media modal
               await contentFrame.click('button[title="Add media file"]');
               let mediaFrameHandle = await page.waitForSelector('[name="modal_frame"]');
               const mediaFrame = await mediaFrameHandle.contentFrame();
               await mediaFrame.waitForSelector('g.node[title="Images"]');
-              await page.screenshot({path: 'screenshots/got-here2.png'});
-              await mediaFrame.click('g.node[title="Images"]');
-              await page.screenshot({path: 'screenshots/got-here3.png'});
-              await mediaFrame.waitForSelector('input[type=file][name="upload_0[]"]');
-              await page.screenshot({path: 'screenshots/got-here4.png'});
+              await takeScreenshot('media-modal-ready', page, i);
               
+              // Switch to Images folder
+              await mediaFrame.click('g.node[title="Images"]');
+              await takeScreenshot('media-modal-switchfolder', page, i);
+              
+              // Wait for upload form
+              await mediaFrame.waitForSelector('input[type=file][name="upload_0[]"]');
+              await takeScreenshot('media-modal-fileinputready', page, i);
+              
+              // Check if image already exists in list (n.b. recent only?)
               let imageAlreadyUploaded = await mediaFrame.evaluate((importItem) => {
                 let el = document.querySelector(`.btn.btn-default[data-file-name="${importItem.featuredImageFileName}"]`)
                 return el ? true : false;
@@ -227,31 +271,38 @@ async function login() {
               console.log('imageAlreadyUploaded? ' + imageAlreadyUploaded);
               
               if(!imageAlreadyUploaded) {
+                // Upload image
                 const fileUploadHandle = await mediaFrame.$('input[type=file][name="upload_0[]"]');
                 await fileUploadHandle.uploadFile(importItem.featuredImagePath);
                 await mediaFrame.click('.btn[type="submit"][value="Upload files"]')
                 await mediaFrame.waitForSelector('.alert.alert-success');
-                await page.screenshot({path: 'screenshots/got-here5.png'});
+                await takeScreenshot('media-modal-imageuploaded', page, i);
               }
               
+              // Select image from list
               await mediaFrame.click(`.btn.btn-default[data-file-name="${importItem.featuredImageFileName}"]`);
-              await page.screenshot({path: 'screenshots/got-here6.png'});
               await page.click('.t3js-modal-close');
-              await page.screenshot({path: 'screenshots/got-here7.png'});
+              await takeScreenshot('media-modal-close', page, i);
+              
+              // Change dropdown to show in all views
               await contentFrame.waitForSelector('select[name$="[showinpreview]"]');
-              await page.screenshot({path: 'screenshots/got-here8.png'});
+              await takeScreenshot('media-tab-ready', page, i);
+              
               await contentFrame.select('select[name$="[showinpreview]"]', "1");
-              await page.screenshot({path: 'screenshots/got-here9.png'});
+              await takeScreenshot('media-tab-showinpreview', page, i);
             
             }
           }
           
+          // All done, save that blog post!
+          await takeScreenshot('news-edit-presave', page, i);
           await contentFrame.click('button[name="_savedok"]');
           await page.waitForNavigation();
         
         } catch(e) {
+          // If we caught a fatal error, rewind and try again
           console.log(e);
-          console.log('...retrying this one');
+          console.log('FATAL ERROR :::: ...retrying this one...');
           i--;
         }
 
@@ -264,14 +315,12 @@ async function login() {
       return reject(e);
     }
   })
-  //process.env.USER_ID
-  //process.env.USER_PASS
+
 }
 
 
 init();
-login().then((setValues) => {
+run().then((setValues) => {
   console.log(setValues);
-  //addPosts(browser).catch(console.err);
-  //close(browser);
+
 }).catch(console.err);
