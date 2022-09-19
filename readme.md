@@ -28,7 +28,7 @@ The `.env` file has the following configs to set up
 ### import.json
 The `data/import.json` file is designed to be fairly straightforward such that you can amend data from your previous system to match fairly easily. You can create a spreadsheet/CSV file of the data and then use an online tool to convert to JSON.
 
-``
+```
 [
   {
     "title": "Blog post title",
@@ -39,7 +39,7 @@ The `data/import.json` file is designed to be fairly straightforward such that y
     "featuredImageURL": "https://elmbridgelibdems.org.uk/wp-content/uploads/2022/08/1million-shared-prosperity.jpg" // URL of an existing image you'd like downloaded and uploaded as the card image/top mast on your blog post
   }
 ]
-``
+```
 
 ### Running the script
 Open terminal and run
