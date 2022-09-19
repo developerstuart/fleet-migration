@@ -5,6 +5,10 @@ Note1: This script needs to use your Fleet login credentials to work. These deta
 
 Note2: Hopefully this script is helpful to you, but it wasn't originally intended for sharing/release. It's only been tested to help Elmbridge import their content and your use case may be different. Also typo3 often throws errors or bugs outside the control of this script.
 
+## Todo
+* Apply categories from data
+* Currently <img> elements inside the HTML content get stripped by typo3 so the only image available is the mast image
+
 ## Setup
 You will need node and npm installed on your machine and familiarity with running both in Terminal or cmd
 
